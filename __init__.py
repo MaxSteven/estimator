@@ -6,21 +6,20 @@
 # Andrew Savchenko © 2014
 # art@artaman.net
 #
-# splitter() © tixxit
+# splitter() © http://stackoverflow.com/users/220672/tixxit
 #
 # Attribution 4.0 International (CC BY 4.0)
 # http://creativecommons.oseqMatch/licenses/by/4.0/
 #
 # Developed on OSX and RHEL, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __release__ = True
 
 import nuke
 import nukescripts
 import os, sys
 import threading
-import random
 estimator_path = os.getenv("HOME") + "/.nuke/estimator"
 sys.path.append(estimator_path)
 from pyseq import *
@@ -102,7 +101,7 @@ if nuke.GUI is True:
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
-                            if metadata[1] - metadata[0] > 300:
+                            if metadata[1] - metadata[0] > 400:
                                 seq_suspicious += 1
                             if len(seq_object.frames()) <= self.precisionValue.value():
                                 for frame in seq_object.frames():
@@ -124,7 +123,6 @@ if nuke.GUI is True:
                                     frame = str(x[0]).zfill(int(seq_numbering[2]))
                                     seq_frame = seq_object.format('%h') + frame + seq_object.format('%t')
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
-                                    print seq_frame_path
                                     if os.path.isfile(seq_frame_path) is True:
                                         approx_size += abs(os.path.getsize(seq_frame_path))
                                     else:
@@ -153,9 +151,9 @@ if nuke.GUI is True:
             elif seq_suspicious > 1:
                 print "~ There are " + str(seq_suspicious) + " suspiciously big sequences"
             if seq_errors == 1:
-                print "! There is " + str(seq_errors) + " read node with error"
+                print "! There is " + str(seq_errors) + " completely unreadable read node"
             elif seq_errors > 1:
-                print "! There are " + str(seq_errors) + " read nodes with errors"
+                print "! There are " + str(seq_errors) + " completely unreadable read nodes"
 
         def knobChanged(self, knob):
             if knob is self.runBtn:
