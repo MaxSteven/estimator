@@ -6,6 +6,8 @@
 # Andrew Savchenko © 2014
 # art@artaman.net
 #
+# splitter() © tixxit
+#
 # Attribution 4.0 International (CC BY 4.0)
 # http://creativecommons.oseqMatch/licenses/by/4.0/
 #
@@ -18,6 +20,7 @@ import nuke
 import nukescripts
 import os, sys
 import threading
+import random
 estimator_path = os.getenv("HOME") + "/.nuke/estimator"
 sys.path.append(estimator_path)
 from pyseq import *
@@ -31,17 +34,17 @@ if nuke.GUI is True:
                 self,
                 'Estimator',
                 'uk.co.thefoundry.estimatorPanel')
-            self.calcBtnDetailed = nuke.PyScript_Knob('Detailed')
-            self.calcBtnSimple = nuke.PyScript_Knob('Simple')
+            self.runBtn = nuke.PyScript_Knob('Run')
             self.printBroken = nuke.Boolean_Knob('Output missing sequences')
             self.precisionValue = nuke.Int_Knob('Frames to calculate: ')
             self.divider = nuke.Text_Knob('')
 
-            self.addKnob(self.calcBtnDetailed)
-            self.addKnob(self.calcBtnSimple)
-            self.addKnob(self.divider)
             self.addKnob(self.precisionValue)
+            self.addKnob(self.runBtn)
+            self.addKnob(self.divider)
             self.addKnob(self.printBroken)
+
+            self.precisionValue.setValue(10)
 
             global DEV
             DEV = 0
@@ -66,14 +69,9 @@ if nuke.GUI is True:
                         if file_path != "":
                             first = node.knob('first').value()
                             last = node.knob('last').value()
-                            # Kind of protection from smartass who put 99999 in "last" field in read node.
-                            # if last > first+500:
-                            #     last = first
                             files_to_check.update({file_path:[first, last]})
 
             print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
-            if checker == 0:
-                print "...tick-tock..."
 
             total_size = 0
             seq_errors = 0
@@ -100,22 +98,40 @@ if nuke.GUI is True:
                         print "seq_object: " + str(seq_object)
                         print "seq_folder: " + seq_folder
                         print "seq_niceName: " + seq_niceName + "\n"
+                    def splitter(a, n):
+                        k, m = len(a) / n, len(a) % n
+                        return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
-                        if metadata[1] - metadata[0] > 300:
-                            seq_suspicious += 1
-                        else:
-                            for frame in seq_object.frames():
-                                if seq_numbering is not None:
-                                    frame = str(frame).zfill(int(seq_numbering[2]))
+                            if metadata[1] - metadata[0] > 300:
+                                seq_suspicious += 1
+                            if len(seq_object.frames()) <= self.precisionValue.value():
+                                for frame in seq_object.frames():
+                                    if seq_numbering is not None:
+                                        frame = str(frame).zfill(int(seq_numbering[2]))
+                                        seq_frame = seq_object.format('%h') + frame + seq_object.format('%t')
+                                        seq_frame_path = os.path.join(seq_folder, seq_frame)
+                                    if DEV > 0:
+                                        print ".: " + seq_frame_path
+                                    if os.path.isfile(seq_frame_path) is True:
+                                        seq_size += abs(os.path.getsize(seq_frame_path))
+                                    else:
+                                        if DEV > 0:
+                                            print "\n! something wrong with " + seq_frame_path + "\n"
+                            else:
+                                approx_size = 0
+                                split = list(splitter(seq_object.frames(), self.precisionValue.value()))
+                                for x in split:
+                                    frame = str(x[0]).zfill(int(seq_numbering[2]))
                                     seq_frame = seq_object.format('%h') + frame + seq_object.format('%t')
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
-                                if DEV > 0:
-                                    print ".: " + seq_frame_path
-                                if os.path.isfile(seq_frame_path) is True:
-                                    seq_size += abs(os.path.getsize(seq_frame_path))
-                                else:
-                                    if DEV > 0:
-                                        print "\n! something wrong with " + seq_frame_path + "\n"
+                                    print seq_frame_path
+                                    if os.path.isfile(seq_frame_path) is True:
+                                        approx_size += abs(os.path.getsize(seq_frame_path))
+                                    else:
+                                        if DEV > 0:
+                                            print "\n! something wrong with " + seq_frame_path + "\n"
+                                approx_size = approx_size / self.precisionValue.value() * metadata[1]
+                                seq_size += approx_size
                     else:
                         if DEV > 0:
                             print ".: " + sequence
@@ -128,8 +144,7 @@ if nuke.GUI is True:
                             print "* " + seq_niceName + " .. " + sconvert(seq_size)
                         else:
                             seq_errors += 1
-                            if self.printBroken.value() is True:
-                                print "* " + seq_niceName + " .. " + sconvert(seq_size)
+                            print "* " + seq_niceName + " .. " + sconvert(seq_size)
                     total_size += seq_size
 
             print "\n~ Total size: " + sconvert(total_size)
@@ -143,10 +158,8 @@ if nuke.GUI is True:
                 print "! There are " + str(seq_errors) + " read nodes with errors"
 
         def knobChanged(self, knob):
-            if knob is self.calcBtnDetailed:
+            if knob is self.runBtn:
                 threading.Thread(target=self.evaluate_script, args=(1,)).start()
-            elif knob is self.calcBtnSimple:
-                threading.Thread(target=self.evaluate_script, args=(0,)).start()
             else:
                 pass
 
