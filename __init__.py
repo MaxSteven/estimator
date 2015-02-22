@@ -34,14 +34,11 @@ if nuke.GUI is True:
                 'Estimator',
                 'uk.co.thefoundry.estimatorPanel')
             self.runBtn = nuke.PyScript_Knob('Run')
-            self.printBroken = nuke.Boolean_Knob('Output missing sequences')
             self.precisionValue = nuke.Int_Knob('Frames to calculate: ')
             self.divider = nuke.Text_Knob('')
 
             self.addKnob(self.precisionValue)
             self.addKnob(self.runBtn)
-            self.addKnob(self.divider)
-            self.addKnob(self.printBroken)
 
             self.precisionValue.setValue(10)
 
@@ -118,6 +115,7 @@ if nuke.GUI is True:
                                             print "\n! something wrong with " + seq_frame_path + "\n"
                             else:
                                 approx_size = 0
+                                calculated = 0
                                 split = list(splitter(seq_object.frames(), self.precisionValue.value()))
                                 for x in split:
                                     frame = str(x[0]).zfill(int(seq_numbering[2]))
@@ -125,11 +123,15 @@ if nuke.GUI is True:
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if os.path.isfile(seq_frame_path) is True:
                                         approx_size += abs(os.path.getsize(seq_frame_path))
+                                        calculated += 1
                                     else:
                                         if DEV > 0:
                                             print "\n! something wrong with " + seq_frame_path + "\n"
-                                approx_size = approx_size / self.precisionValue.value() * metadata[1]
-                                seq_size += approx_size
+                                if calculated > 0:
+                                    approx_size = approx_size / calculated * metadata[1]
+                                    seq_size += approx_size
+                                else:
+                                    seq_size += approx_size
                     else:
                         if DEV > 0:
                             print ".: " + sequence
