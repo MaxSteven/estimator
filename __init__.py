@@ -23,7 +23,7 @@ import nuke
 import nukescripts
 import os, sys
 import threading
-estimator_path = os.getenv("HOME") + "/.nuke/estimatorN"
+estimator_path = os.getenv("HOME") + "/.nuke/estimator"
 sys.path.append(estimator_path)
 from pyseq import *
 from filesize import size as sconvert
@@ -46,7 +46,7 @@ if nuke.GUI is True:
             self.precisionValue.setValue(10)
 
             global DEV
-            DEV = 0
+            DEV = 1
 
         def evaluate_script(self, checker=0):
 
@@ -110,7 +110,7 @@ if nuke.GUI is True:
                         print "seq_object: " + str(seq_object)
                         print "seq_folder: " + seq_folder
                         print "seq_niceName: " + seq_niceName + "\n"
-                    def splitter(a, n): # (c) tixxit
+                    def splitter(a, n):
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
@@ -121,7 +121,7 @@ if nuke.GUI is True:
                                     seq_frame = seq_object.format('%h') + metadata[0] + seq_object.format('%t')
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if DEV > 0:
-                                        print ".: " + seq_frame_path
+                                        print "estimating file: " + seq_frame_path
                                     if os.path.isfile(seq_frame_path) is True:
                                         seq_size += abs(os.path.getsize(seq_frame_path))
                                     else:
@@ -161,7 +161,7 @@ if nuke.GUI is True:
                                     seq_size += approx_size
                     else:
                         if DEV > 0:
-                            print ".: " + sequence
+                            print "estimating SINGLE file: " + sequence
                         if os.path.isfile(sequence) is True:
                             seq_size += abs(os.path.getsize(sequence))
 
@@ -185,10 +185,14 @@ if nuke.GUI is True:
                 print "! There are " + str(seq_errors) + " cunreadable read nodes (which is probably a bug)"
 
         def knobChanged(self, knob):
+            prj_first_frame = int(nuke.toNode('root').knob('first_frame').value())
+            prj_last_frame = int(nuke.toNode('root').knob('last_frame').value())
+            prj_length = abs(prj_last_frame-prj_first_frame)
             if knob is self.runBtn:
                 threading.Thread(target=self.evaluate_script, args=(1,)).start()
-            else:
-                pass
+            elif knob is self.precisionValue:
+                if self.precisionValue.value() >= prj_length-2:
+                    self.precisionValue.setValue(prj_length)
 
     def addPanel():
         return estimatorPanel().addToPane()
