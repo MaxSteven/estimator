@@ -11,8 +11,7 @@
 #
 # TODO:
 # * Fix bug when it's unable to calculate read node with single frame range
-# * precisionValue shouldn't be more than shot_length-1
-# * Clean up
+# * There is some duplicated code that _should_ be refactored
 #
 # Developed on OSX and RHEL, should work on random *nix system
 # --------------------------------------------------------------
@@ -83,10 +82,8 @@ if nuke.GUI is True:
             seq_suspicious = 0
             for sequence, metadata in files_to_check.iteritems():
                     if DEV > 0:
-                        print "* Sequence: " + sequence
+                        print "\n* Sequence: " + sequence
                         print "range: " + str(metadata)
-                    # Fix for ILM
-                    # seq_padding = str(sequence.split(".")[:1][0]).split("/")[-1]
                     seq_padding = sequence.split("/")[-1]
                     seq_padding = "".join(seq_padding.split(".")[:-1])
                     if "%d" in seq_padding:
@@ -109,7 +106,7 @@ if nuke.GUI is True:
                         print "seq_name_full: " + seq_name_full
                         print "seq_object: " + str(seq_object)
                         print "seq_folder: " + seq_folder
-                        print "seq_niceName: " + seq_niceName + "\n"
+                        print "seq_niceName: " + seq_niceName
                     def splitter(a, n):
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
@@ -122,6 +119,7 @@ if nuke.GUI is True:
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if DEV > 0:
                                         print "estimating file: " + seq_frame_path
+                                    print "Checking file: " + seq_frame_path
                                     if os.path.isfile(seq_frame_path) is True:
                                         seq_size += abs(os.path.getsize(seq_frame_path))
                                     else:
