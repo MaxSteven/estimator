@@ -10,12 +10,11 @@
 # http://creativecommons.oseqMatch/licenses/by/4.0/
 #
 # TODO:
-# * Fix bug when it's unable to calculate read node with single frame range
 # * There is some duplicated code that _should_ be refactored
 #
 # Developed on OSX and RHEL, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __release__ = True
 
 import nuke
@@ -38,9 +37,12 @@ if nuke.GUI is True:
             self.runBtn = nuke.PyScript_Knob('Run')
             self.precisionValue = nuke.Int_Knob('Frames to calculate: ')
             self.divider = nuke.Text_Knob('')
+            self.pathBool = nuke.Boolean_Knob('Show full path')
 
             self.addKnob(self.precisionValue)
             self.addKnob(self.runBtn)
+            self.addKnob(self.divider)
+            self.addKnob(self.pathBool)
 
             self.precisionValue.setValue(10)
 
@@ -163,12 +165,18 @@ if nuke.GUI is True:
                             seq_size += abs(os.path.getsize(sequence))
 
                     files_to_check[sequence].append(seq_size)
-                    if checker > 0:
-                        if seq_size > 0:
-                            print "* " + seq_niceName + "...." + sconvert(seq_size)
-                        else:
+                    if checker > 0: # Horror story below... Can be written 3 times more concise
+                        if seq_size > 0 and self.pathBool.value() is False:
+                            print "* " + seq_niceName + " .... " + sconvert(seq_size)
+                        elif self.pathBool.value() is False:
                             seq_errors += 1
-                            print "* " + seq_niceName + "...." + sconvert(seq_size)
+                            print "* " + seq_niceName + " .... " + sconvert(seq_size)
+                        elif seq_size > 0 and self.pathBool.value() is True:
+                            print "* " + sequence + " .... " + sconvert(seq_size)
+                        elif self.pathBool.value() is True:
+                            seq_errors += 1
+                            print "* " + sequence + " .... " + sconvert(seq_size)
+                            # End of horror code block. I'm tired.
                     total_size += seq_size
 
             print "\n~ Total size: " + sconvert(total_size)
@@ -177,9 +185,9 @@ if nuke.GUI is True:
             elif seq_suspicious > 1:
                 print "~ There are " + str(seq_suspicious) + " suspiciously big sequences"
             if seq_errors == 1:
-                print "! There is " + str(seq_errors) + " unreadable read node (which is probably a bug)"
+                print "! There is " + str(seq_errors) + " unreadable read node"
             elif seq_errors > 1:
-                print "! There are " + str(seq_errors) + " cunreadable read nodes (which is probably a bug)"
+                print "! There are " + str(seq_errors) + " unreadable read nodes"
 
         def knobChanged(self, knob):
             prj_first_frame = int(nuke.toNode('root').knob('first_frame').value())
