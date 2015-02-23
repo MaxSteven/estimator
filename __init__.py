@@ -45,7 +45,7 @@ if nuke.GUI is True:
             self.precisionValue.setValue(10)
 
             global DEV
-            DEV = 1
+            DEV = 0
 
         def evaluate_script(self, checker=0):
 
@@ -114,12 +114,11 @@ if nuke.GUI is True:
                             if metadata[1] - metadata[0] > 400:
                                 seq_suspicious += 1
                             if len(seq_object.frames()) <= self.precisionValue.value():
-                                if seq_object.frames() < 2:
-                                    seq_frame = seq_object.format('%h') + metadata[0] + seq_object.format('%t')
+                                if len(seq_object.frames()) < 2:
+                                    seq_frame = seq_object.format('%h') + seq_object.format('%t')
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if DEV > 0:
                                         print "estimating file: " + seq_frame_path
-                                    print "Checking file: " + seq_frame_path
                                     if os.path.isfile(seq_frame_path) is True:
                                         seq_size += abs(os.path.getsize(seq_frame_path))
                                     else:
