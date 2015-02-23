@@ -6,10 +6,13 @@
 # Andrew Savchenko © 2014
 # art@artaman.net
 #
-# splitter() © http://stackoverflow.com/users/220672/tixxit
-#
 # Attribution 4.0 International (CC BY 4.0)
 # http://creativecommons.oseqMatch/licenses/by/4.0/
+#
+# TODO:
+# * Fix bug when it's unable to calculate read node with single frame range
+# * precisionValue shouldn't be more than shot_length-1
+# * Clean up
 #
 # Developed on OSX and RHEL, should work on random *nix system
 # --------------------------------------------------------------
@@ -20,7 +23,7 @@ import nuke
 import nukescripts
 import os, sys
 import threading
-estimator_path = os.getenv("HOME") + "/.nuke/estimator"
+estimator_path = os.getenv("HOME") + "/.nuke/estimatorN"
 sys.path.append(estimator_path)
 from pyseq import *
 from filesize import size as sconvert
@@ -58,6 +61,9 @@ if nuke.GUI is True:
                             first = len(str(subNode.knob('first').value()))
                             last = len(str(subNode.knob('last').value()))
                             if file_path != "":
+                                if "%d" in file_path:
+                                    seq_numbering = "%0" + str(len(str(last))) + "d"
+                                    file_path = file_path.replace("%d", seq_numbering)
                                 files_to_check.update({file_path:[first, last]})
                 else:
                     if node.Class() in readTypes:
@@ -65,6 +71,9 @@ if nuke.GUI is True:
                         if file_path != "":
                             first = node.knob('first').value()
                             last = node.knob('last').value()
+                            if "%d" in file_path:
+                                    seq_numbering = "%0" + str(len(str(last))) + "d"
+                                    file_path = file_path.replace("%d", seq_numbering)
                             files_to_check.update({file_path:[first, last]})
 
             print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
@@ -76,8 +85,15 @@ if nuke.GUI is True:
                     if DEV > 0:
                         print "* Sequence: " + sequence
                         print "range: " + str(metadata)
-                    seq_padding = str(sequence.split(".")[:1][0]).split("/")[-1]
-                    if len(seq_padding.split("#")) > 1:
+                    # Fix for ILM
+                    # seq_padding = str(sequence.split(".")[:1][0]).split("/")[-1]
+                    seq_padding = sequence.split("/")[-1]
+                    seq_padding = "".join(seq_padding.split(".")[:-1])
+                    if "%d" in seq_padding:
+                        seq_numbering = "%0" + str(len(str(metadata[1]))) + "d"
+                        sequence = sequence.replace("%d", seq_numbering)
+                        print "New sequence name: " + sequence
+                    elif len(seq_padding.split("#")) > 1:
                         seq_numbering = "%0" + str(seq_padding.count("#")) + "d"
                     elif len(seq_padding.split("%")) > 1:
                         seq_numbering = "%" + seq_padding.split("%")[-1]
@@ -94,18 +110,16 @@ if nuke.GUI is True:
                         print "seq_object: " + str(seq_object)
                         print "seq_folder: " + seq_folder
                         print "seq_niceName: " + seq_niceName + "\n"
-                    def splitter(a, n):
+                    def splitter(a, n): # (c) tixxit
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
                             if metadata[1] - metadata[0] > 400:
                                 seq_suspicious += 1
                             if len(seq_object.frames()) <= self.precisionValue.value():
-                                for frame in seq_object.frames():
-                                    if seq_numbering is not None:
-                                        frame = str(frame).zfill(int(seq_numbering[2]))
-                                        seq_frame = seq_object.format('%h') + frame + seq_object.format('%t')
-                                        seq_frame_path = os.path.join(seq_folder, seq_frame)
+                                if seq_object.frames() < 2:
+                                    seq_frame = seq_object.format('%h') + metadata[0] + seq_object.format('%t')
+                                    seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if DEV > 0:
                                         print ".: " + seq_frame_path
                                     if os.path.isfile(seq_frame_path) is True:
@@ -113,6 +127,19 @@ if nuke.GUI is True:
                                     else:
                                         if DEV > 0:
                                             print "\n! something wrong with " + seq_frame_path + "\n"
+                                else:
+                                    for frame in seq_object.frames():
+                                        if seq_numbering is not None:
+                                            frame = str(frame).zfill(int(seq_numbering[2]))
+                                            seq_frame = seq_object.format('%h') + frame + seq_object.format('%t')
+                                            seq_frame_path = os.path.join(seq_folder, seq_frame)
+                                        if DEV > 0:
+                                            print ".: " + seq_frame_path
+                                        if os.path.isfile(seq_frame_path) is True:
+                                            seq_size += abs(os.path.getsize(seq_frame_path))
+                                        else:
+                                            if DEV > 0:
+                                                print "\n! something wrong with " + seq_frame_path + "\n"
                             else:
                                 approx_size = 0
                                 calculated = 0
@@ -141,10 +168,10 @@ if nuke.GUI is True:
                     files_to_check[sequence].append(seq_size)
                     if checker > 0:
                         if seq_size > 0:
-                            print "* " + seq_niceName + " .. " + sconvert(seq_size)
+                            print "* " + seq_niceName + "...." + sconvert(seq_size)
                         else:
                             seq_errors += 1
-                            print "* " + seq_niceName + " .. " + sconvert(seq_size)
+                            print "* " + seq_niceName + "...." + sconvert(seq_size)
                     total_size += seq_size
 
             print "\n~ Total size: " + sconvert(total_size)
@@ -153,9 +180,9 @@ if nuke.GUI is True:
             elif seq_suspicious > 1:
                 print "~ There are " + str(seq_suspicious) + " suspiciously big sequences"
             if seq_errors == 1:
-                print "! There is " + str(seq_errors) + " completely unreadable read node"
+                print "! There is " + str(seq_errors) + " unreadable read node (which is probably a bug)"
             elif seq_errors > 1:
-                print "! There are " + str(seq_errors) + " completely unreadable read nodes"
+                print "! There are " + str(seq_errors) + " cunreadable read nodes (which is probably a bug)"
 
         def knobChanged(self, knob):
             if knob is self.runBtn:
