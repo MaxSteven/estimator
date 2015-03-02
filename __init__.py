@@ -11,6 +11,8 @@
 #
 # TODO:
 # * There is some duplicated code that _should_ be refactored
+# * Make estimation of "suspicious" sequence based on project length
+# *
 #
 # Developed on OSX and RHEL, should work on random *nix system
 # --------------------------------------------------------------
@@ -51,7 +53,7 @@ if nuke.GUI is True:
         def evaluate_script(self, checker=0):
 
             files_to_check = {}
-            readTypes = ('Read', 'ReadGeo2')
+            readTypes = ('Read', 'ReadGeo2', 'DeepRead')
 
             def fill_files(N):
                 """
@@ -85,8 +87,7 @@ if nuke.GUI is True:
                     if DEV > 0:
                         print "\n* Sequence: " + sequence
                         print "range: " + str(metadata)
-                    seq_padding = sequence.split("/")[-1]
-                    seq_padding = "".join(seq_padding.split(".")[:-1])
+                    seq_padding = "".join(sequence.split("/")[-1].split(".")[:-1])
                     if "%d" in seq_padding:
                         seq_numbering = "%0" + str(len(str(metadata[1]))) + "d"
                         sequence = sequence.replace("%d", seq_numbering)
@@ -109,6 +110,12 @@ if nuke.GUI is True:
                         print "seq_folder: " + seq_folder
                         print "seq_niceName: " + seq_niceName
                     def splitter(a, n):
+                        '''
+                        Magic function found across the stackoverflow
+                        :param a: divide A
+                        :param n: by N parts
+                        :return: equally splitted lists
+                        '''
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
