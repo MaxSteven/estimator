@@ -65,10 +65,11 @@ if nuke.GUI is True:
                     first = len(str(N.knob('first').value()))
                     last = len(str(N.knob('last').value()))
                     if "%d" in file_path:
-                        seq_numbering = "%0" + str(len(str(last))) + "d"
-                        file_path = file_path.replace("%d", seq_numbering)
+                        numbering = "%0" + str(len(str(last))) + "d"
+                        file_path = file_path.replace("%d", numbering)
                     return files_to_check.update({file_path: [first, last]})
 
+            # noinspection PyArgumentList
             for node in nuke.allNodes():
                 if node.knob('gizmo_file') is not None or node.Class() == "Group":
                     for subNode in nuke.toNode(node.name()).nodes():
@@ -110,12 +111,12 @@ if nuke.GUI is True:
                         print "seq_folder: " + seq_folder
                         print "seq_niceName: " + seq_niceName
                     def splitter(a, n):
-                        '''
+                        """
                         Magic function found across the stackoverflow
                         :param a: divide A
                         :param n: by N parts
                         :return: equally splitted lists
-                        '''
+                        """
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
@@ -210,6 +211,7 @@ if nuke.GUI is True:
 
 if nuke.GUI is True:
     menu = nuke.menu("Pane")
+    # noinspection PyUnboundLocalVariable
     menu.addCommand("Estimator", addPanel)
     nukescripts.registerPanel(
         "uk.co.thefoundry.estimatorPanel", addPanel)
