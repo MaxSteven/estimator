@@ -14,7 +14,7 @@
 #
 # Developed on OSX and RHEL, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 __release__ = True
 
 import nuke
@@ -28,7 +28,6 @@ from filesize import size as sconvert
 
 if nuke.GUI is True:
     class estimatorPanel(nukescripts.PythonPanel):
-
         def __init__(self):
             nukescripts.PythonPanel.__init__(
                 self,
@@ -54,28 +53,28 @@ if nuke.GUI is True:
             files_to_check = {}
             readTypes = ('Read', 'ReadGeo2')
 
+            def fill_files(N):
+                """
+                :param N: read node within group/gizmo or directly from DAG
+                :return: updated files_to_check
+                """
+                file_path = N.knob('file').value()
+                if file_path != "" and not None:
+                    first = len(str(N.knob('first').value()))
+                    last = len(str(N.knob('last').value()))
+                    if "%d" in file_path:
+                        seq_numbering = "%0" + str(len(str(last))) + "d"
+                        file_path = file_path.replace("%d", seq_numbering)
+                    return files_to_check.update({file_path: [first, last]})
+
             for node in nuke.allNodes():
                 if node.knob('gizmo_file') is not None or node.Class() == "Group":
                     for subNode in nuke.toNode(node.name()).nodes():
                         if subNode.Class() in readTypes:
-                            file_path = subNode.knob('file').value()
-                            first = len(str(subNode.knob('first').value()))
-                            last = len(str(subNode.knob('last').value()))
-                            if file_path != "":
-                                if "%d" in file_path:
-                                    seq_numbering = "%0" + str(len(str(last))) + "d"
-                                    file_path = file_path.replace("%d", seq_numbering)
-                                files_to_check.update({file_path:[first, last]})
+                            fill_files(N=subNode)
                 else:
                     if node.Class() in readTypes:
-                        file_path = node.knob('file').value()
-                        if file_path != "":
-                            first = node.knob('first').value()
-                            last = node.knob('last').value()
-                            if "%d" in file_path:
-                                    seq_numbering = "%0" + str(len(str(last))) + "d"
-                                    file_path = file_path.replace("%d", seq_numbering)
-                            files_to_check.update({file_path:[first, last]})
+                        fill_files(N=node)
 
             print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
 
