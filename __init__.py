@@ -1,20 +1,19 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # --------------------------------------------------------------
 # Estimator: calculate space occupied by files presented in script
 #
-# Andrew Savchenko © 2014
+# Andrew Savchenko © 2015
 # art@artaman.net
 #
 # Attribution 4.0 International (CC BY 4.0)
-# http://creativecommons.oseqMatch/licenses/by/4.0/
+# https://creativecommons.org/licenses/by/4.0/
 #
 # TODO:
 # * There is some duplicated code that _should_ be refactored
 # * Make estimation of "suspicious" sequence based on project length
 # *
 #
-# Developed on OSX and RHEL, should work on random *nix system
+# Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
 __version__ = "0.0.5"
 __release__ = True
@@ -47,8 +46,12 @@ if nuke.GUI is True:
 
             self.precisionValue.setValue(10)
 
+            self.prj_first_frame = int(nuke.toNode('root').knob('first_frame').value())
+            self.prj_last_frame = int(nuke.toNode('root').knob('last_frame').value())
+            self.prj_length = abs(self.prj_last_frame - self.prj_first_frame)
+
             global DEV
-            DEV = 0
+            DEV = 1
 
         def evaluate_script(self, checker=0):
 
@@ -92,7 +95,8 @@ if nuke.GUI is True:
                     if "%d" in seq_padding:
                         seq_numbering = "%0" + str(len(str(metadata[1]))) + "d"
                         sequence = sequence.replace("%d", seq_numbering)
-                        print "New sequence name: " + sequence
+                        if DEV > 0:
+                            print "New sequence name: " + sequence
                     elif len(seq_padding.split("#")) > 1:
                         seq_numbering = "%0" + str(seq_padding.count("#")) + "d"
                     elif len(seq_padding.split("%")) > 1:
@@ -120,7 +124,7 @@ if nuke.GUI is True:
                         k, m = len(a) / n, len(a) % n
                         return (a[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in xrange(n))
                     if seq_object:
-                            if metadata[1] - metadata[0] > 400:
+                            if metadata[1] - metadata[0] > self.prj_length + 50:
                                 seq_suspicious += 1
                             if len(seq_object.frames()) <= self.precisionValue.value():
                                 if len(seq_object.frames()) < 2:
@@ -197,14 +201,11 @@ if nuke.GUI is True:
                 print "! There are " + str(seq_errors) + " unreadable read nodes"
 
         def knobChanged(self, knob):
-            prj_first_frame = int(nuke.toNode('root').knob('first_frame').value())
-            prj_last_frame = int(nuke.toNode('root').knob('last_frame').value())
-            prj_length = abs(prj_last_frame-prj_first_frame)
             if knob is self.runBtn:
                 threading.Thread(target=self.evaluate_script, args=(1,)).start()
             elif knob is self.precisionValue:
-                if self.precisionValue.value() >= prj_length-2:
-                    self.precisionValue.setValue(prj_length)
+                if self.precisionValue.value() >= self.prj_length-2:
+                    self.precisionValue.setValue(self.prj_length)
 
     def addPanel():
         return estimatorPanel().addToPane()
