@@ -8,12 +8,9 @@
 # Attribution 4.0 International (CC BY 4.0)
 # https://creativecommons.org/licenses/by/4.0/
 #
-# TODO:
-# * There is some duplicated code that _should_ be refactored
-#
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 __release__ = True
 
 import nuke
@@ -49,7 +46,7 @@ if nuke.GUI is True:
             self.prj_length = abs(self.prj_last_frame - self.prj_first_frame)
 
             global DEV
-            DEV = 1
+            DEV = 0
 
         def evaluate_script(self, checker=0):
 
@@ -174,18 +171,15 @@ if nuke.GUI is True:
 
                     files_to_check[sequence].append(seq_size)
 
-                    if checker > 0: # Horror story below... Can be written 3 times more concise
-                        if seq_size > 0 and self.pathBool.value() is False:
-                            print "* " + seq_niceName + " .... " + sconvert(seq_size)
-                        elif self.pathBool.value() is False:
+                    if checker > 0:
+                        if seq_size > 0:
+                            if self.pathBool.value() is False:
+                                constr = seq_niceName
+                            else:
+                                constr = sequence
+                        else:
                             seq_errors += 1
-                            print "* " + seq_niceName + " .... " + sconvert(seq_size)
-                        elif seq_size > 0 and self.pathBool.value() is True:
-                            print "* " + sequence + " .... " + sconvert(seq_size)
-                        elif self.pathBool.value() is True:
-                            seq_errors += 1
-                            print "* " + sequence + " .... " + sconvert(seq_size)
-                            # End of horror code block. I'm tired.
+                        print "* " + constr + " .... " + sconvert(seq_size)
                     total_size += seq_size
 
             print "\n~ Total size: " + sconvert(total_size)
