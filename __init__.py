@@ -183,14 +183,10 @@ if nuke.GUI is True:
                     total_size += seq_size
 
             print "\n~ Total size: " + sconvert(total_size)
-            if seq_suspicious == 1:
-                print "~ There is " + str(seq_suspicious) + " suspiciously big sequence"
-            elif seq_suspicious > 1:
-                print "~ There are " + str(seq_suspicious) + " suspiciously big sequences"
-            if seq_errors == 1:
-                print "! There is " + str(seq_errors) + " unreadable read node"
-            elif seq_errors > 1:
-                print "! There are " + str(seq_errors) + " unreadable read nodes"
+            if seq_suspicious > 0:
+                print "~ Suspiciously big sequences: %s" %seq_suspicious
+            elif seq_errors > 0:
+                print "! Unreadable read nodes: %s" %seq_errors
 
         def knobChanged(self, knob):
             if knob is self.runBtn:
