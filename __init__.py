@@ -10,8 +10,6 @@
 #
 # TODO:
 # * There is some duplicated code that _should_ be refactored
-# * Make estimation of "suspicious" sequence based on project length
-# *
 #
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
@@ -116,7 +114,6 @@ if nuke.GUI is True:
                         print "seq_niceName: " + seq_niceName
                     def splitter(a, n):
                         """
-                        Magic function found across the stackoverflow
                         :param a: divide A
                         :param n: by N parts
                         :return: equally splitted lists
@@ -131,7 +128,7 @@ if nuke.GUI is True:
                                     seq_frame = seq_object.format('%h') + seq_object.format('%t')
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if DEV > 0:
-                                        print "estimating file: " + seq_frame_path
+                                        print ".: " + seq_frame_path
                                     if os.path.isfile(seq_frame_path) is True:
                                         seq_size += abs(os.path.getsize(seq_frame_path))
                                     else:
@@ -164,7 +161,7 @@ if nuke.GUI is True:
                                     else:
                                         if DEV > 0:
                                             print "\n! something wrong with " + seq_frame_path + "\n"
-                                if calculated > 0:
+                                if calculated > 1:
                                     approx_size = approx_size / calculated * metadata[1]
                                     seq_size += approx_size
                                 else:
@@ -176,6 +173,7 @@ if nuke.GUI is True:
                             seq_size += abs(os.path.getsize(sequence))
 
                     files_to_check[sequence].append(seq_size)
+
                     if checker > 0: # Horror story below... Can be written 3 times more concise
                         if seq_size > 0 and self.pathBool.value() is False:
                             print "* " + seq_niceName + " .... " + sconvert(seq_size)
