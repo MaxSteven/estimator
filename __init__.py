@@ -69,7 +69,7 @@ if nuke.GUI is True:
 
             # noinspection PyArgumentList
             for node in nuke.allNodes():
-                if node.knob('gizmo_file') is not None or node.Class() == "Group":
+                if node.knob('gizmo_file') or node.Class() == "Group":
                     for subNode in nuke.toNode(node.name()).nodes():
                         if subNode.Class() in readTypes:
                             fill_files(N=subNode)
@@ -133,7 +133,7 @@ if nuke.GUI is True:
                                             print "\n! something wrong with " + seq_frame_path + "\n"
                                 else:
                                     for frame in seq_object.frames():
-                                        if seq_numbering is not None:
+                                        if seq_numbering:
                                             frame = str(frame).zfill(int(seq_numbering[2]))
                                             seq_frame = seq_object.format('%h') + frame + seq_object.format('%t')
                                             seq_frame_path = os.path.join(seq_folder, seq_frame)
