@@ -10,7 +10,7 @@
 #
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 __release__ = True
 
 import nuke
