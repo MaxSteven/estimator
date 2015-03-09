@@ -59,7 +59,7 @@ if nuke.GUI is True:
                 :return: updated files_to_check
                 """
                 file_path = N.knob('file').value()
-                if file_path != "" and not None:
+                if file_path:
                     first = N.knob('first').value()
                     last = N.knob('last').value()
                     if "%d" in file_path:
@@ -92,9 +92,9 @@ if nuke.GUI is True:
                         sequence = sequence.replace("%d", seq_numbering)
                         if DEV > 0:
                             print "New sequence name: " + sequence
-                    elif len(seq_padding.split("#")) > 1:
+                    elif "#" in seq_padding:
                         seq_numbering = "%0" + str(seq_padding.count("#")) + "d"
-                    elif len(seq_padding.split("%")) > 1:
+                    elif "%" in seq_padding:
                         seq_numbering = "%" + seq_padding.split("%")[-1]
                     else:
                         seq_numbering = None
@@ -198,7 +198,7 @@ if nuke.GUI is True:
     def addPanel():
         return estimatorPanel().addToPane()
 
-if nuke.GUI is True:
+if nuke.GUI:
     menu = nuke.menu("Pane")
     # noinspection PyUnboundLocalVariable
     menu.addCommand("Estimator", addPanel)
