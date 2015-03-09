@@ -65,8 +65,8 @@ if nuke.GUI is True:
                 """
                 file_path = N.knob('file').value()
                 if file_path != "" and not None:
-                    first = len(str(N.knob('first').value()))
-                    last = len(str(N.knob('last').value()))
+                    first = N.knob('first').value()
+                    last = N.knob('last').value()
                     if "%d" in file_path:
                         numbering = "%0" + str(len(str(last))) + "d"
                         file_path = file_path.replace("%d", numbering)
