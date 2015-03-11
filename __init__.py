@@ -51,7 +51,9 @@ if nuke.GUI is True:
         def evaluate_script(self, checker=0):
 
             files_to_check = {}
-            readTypes = ('Read', 'ReadGeo2', 'DeepRead')
+            # Temporarily disabled ReadGeo due the strange bug
+            # readTypes = ('Read', 'ReadGeo2', 'DeepRead')
+            readTypes = ('Read', 'DeepRead')
 
             def fill_files(N):
                 """
@@ -72,9 +74,13 @@ if nuke.GUI is True:
                 if node.knob('gizmo_file') or node.Class() == "Group":
                     for subNode in nuke.toNode(node.name()).nodes():
                         if subNode.Class() in readTypes:
+                            if DEV > 0:
+                                print "Adding:" + node.fullName() + ", class: " + str(node.Class())
                             fill_files(N=subNode)
                 else:
                     if node.Class() in readTypes:
+                        if DEV > 0:
+                            print "Adding:" + node.fullName() + ", class: " + str(node.Class())
                         fill_files(N=node)
 
             print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
