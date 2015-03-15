@@ -8,12 +8,9 @@
 # Attribution 4.0 International (CC BY 4.0)
 # https://creativecommons.org/licenses/by/4.0/
 #
-# TODO:
-# * Estimate only enabled nodes (add checkbox)
-#
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 __release__ = True
 
 import nuke
@@ -36,20 +33,23 @@ if nuke.GUI is True:
             self.precisionValue = nuke.Int_Knob('Frames to calculate: ')
             self.divider = nuke.Text_Knob('')
             self.pathBool = nuke.Boolean_Knob('Show full path')
+            self.disabledBool = nuke.Boolean_Knob('Estimate disabled nodes')
 
             self.addKnob(self.precisionValue)
             self.addKnob(self.runBtn)
             self.addKnob(self.divider)
             self.addKnob(self.pathBool)
+            self.addKnob(self.disabledBool)
 
             self.precisionValue.setValue(10)
+            self.disabledBool.setValue(1)
 
             self.prj_first_frame = int(nuke.toNode('root').knob('first_frame').value())
             self.prj_last_frame = int(nuke.toNode('root').knob('last_frame').value())
             self.prj_length = abs(self.prj_last_frame - self.prj_first_frame)
 
             global DEV
-            DEV = 1
+            DEV = 0
 
         def evaluate_script(self, checker=0):
 
@@ -59,8 +59,11 @@ if nuke.GUI is True:
             def fill_files(N):
                 """
                 :param N: read node within group/gizmo or directly from DAG
-                :return: updated files_to_check
+                :return: updated files_to_check or None
                 """
+                if N.knob('disable').value():
+                    if not self.disabledBool.value():
+                        return None
                 file_path = N.knob('file').value()
                 if file_path:
                     if N.Class() == "ReadGeo2":
