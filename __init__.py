@@ -10,13 +10,14 @@
 #
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.9"
+__version__ = "0.1.0"
 __release__ = True
 
 import nuke
 import nukescripts
 import os, sys
 import threading
+import operator
 estimator_path = os.getenv("HOME") + "/.nuke/estimator"
 sys.path.append(estimator_path)
 from pyseq import *
@@ -34,12 +35,14 @@ if nuke.GUI is True:
             self.divider = nuke.Text_Knob('')
             self.pathBool = nuke.Boolean_Knob('Show full path')
             self.disabledBool = nuke.Boolean_Knob('Estimate disabled nodes')
+            self.sortedBool = nuke.Boolean_Knob('Sort by size')
 
             self.addKnob(self.precisionValue)
             self.addKnob(self.runBtn)
             self.addKnob(self.divider)
             self.addKnob(self.pathBool)
             self.addKnob(self.disabledBool)
+            self.addKnob(self.sortedBool)
 
             self.precisionValue.setValue(10)
             self.disabledBool.setValue(1)
@@ -98,6 +101,7 @@ if nuke.GUI is True:
             total_size = 0
             seq_errors = 0
             seq_suspicious = 0
+            nice_files_to_check = {}
             for sequence, metadata in files_to_check.iteritems():
                     if DEV > 0:
                         print "\n* Sequence: " + sequence
@@ -188,15 +192,25 @@ if nuke.GUI is True:
                     files_to_check[sequence].append(seq_size)
 
                     if checker > 0:
-                        if seq_size > 0:
-                            if self.pathBool.value() is False:
-                                constr = seq_niceName
+                            if seq_size > 0:
+                                if self.pathBool.value() is False:
+                                    constr = seq_niceName
+                                else:
+                                    constr = sequence
                             else:
-                                constr = sequence
-                        else:
-                            seq_errors += 1
-                        print "* " + constr + " .... " + sconvert(seq_size)
-                    total_size += seq_size
+                                seq_errors += 1
+                            if not self.sortedBool.value():
+                                print "* " + constr + " .... " + sconvert(seq_size)
+                            else:
+                                nice_files_to_check[constr] = files_to_check[sequence]
+                            total_size += seq_size
+
+            if self.sortedBool.value():
+                for x in nice_files_to_check:
+                    nice_files_to_check[x] = nice_files_to_check[x][2]
+                sorted_files_to_check = sorted(nice_files_to_check.items(), key=operator.itemgetter(1), reverse=True)
+                for x in sorted_files_to_check:
+                    print "* " + str(x[0]) + " .... " + sconvert(int(x[1]))
 
             print "\n~ Total size: " + sconvert(total_size)
             if seq_suspicious > 0:
