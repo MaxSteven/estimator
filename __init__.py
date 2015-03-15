@@ -8,9 +8,12 @@
 # Attribution 4.0 International (CC BY 4.0)
 # https://creativecommons.org/licenses/by/4.0/
 #
+# TODO:
+# * Estimate only enabled nodes (add checkbox)
+#
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 __release__ = True
 
 import nuke
@@ -46,14 +49,12 @@ if nuke.GUI is True:
             self.prj_length = abs(self.prj_last_frame - self.prj_first_frame)
 
             global DEV
-            DEV = 0
+            DEV = 1
 
         def evaluate_script(self, checker=0):
 
             files_to_check = {}
-            # Temporarily disabled ReadGeo due the strange bug
-            # readTypes = ('Read', 'ReadGeo2', 'DeepRead')
-            readTypes = ('Read', 'DeepRead')
+            readTypes = ('Read', 'DeepRead', 'ReadGeo2')
 
             def fill_files(N):
                 """
@@ -62,8 +63,12 @@ if nuke.GUI is True:
                 """
                 file_path = N.knob('file').value()
                 if file_path:
-                    first = N.knob('first').value()
-                    last = N.knob('last').value()
+                    if N.Class() == "ReadGeo2":
+                        first = int(N.knob('range_first').value())
+                        last = int(N.knob('range_last').value())
+                    else:
+                        first = int(N.knob('first').value())
+                        last = int(N.knob('last').value())
                     if "%d" in file_path:
                         numbering = "%0" + str(len(str(last))) + "d"
                         file_path = file_path.replace("%d", numbering)
@@ -75,12 +80,14 @@ if nuke.GUI is True:
                     for subNode in nuke.toNode(node.name()).nodes():
                         if subNode.Class() in readTypes:
                             if DEV > 0:
-                                print "Adding:" + node.fullName() + ", class: " + str(node.Class())
+                                print "Adding: " + subNode.fullName() + ", class: " + str(subNode.Class())
+                                print subNode.knob('file').value() + "\n"
                             fill_files(N=subNode)
                 else:
                     if node.Class() in readTypes:
                         if DEV > 0:
-                            print "Adding:" + node.fullName() + ", class: " + str(node.Class())
+                            print "Adding: " + node.fullName() + ", class: " + str(node.Class())
+                            print node.knob('file').value() + "\n"
                         fill_files(N=node)
 
             print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
