@@ -10,7 +10,7 @@
 #
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __release__ = True
 
 import nuke
@@ -85,13 +85,13 @@ if nuke.GUI is True:
                 if node.knob('gizmo_file') or node.Class() == "Group":
                     for subNode in nuke.toNode(node.name()).nodes():
                         if subNode.Class() in readTypes:
-                            if DEV > 0:
+                            if DEV > 1:
                                 print "Adding: " + subNode.fullName() + ", class: " + str(subNode.Class())
                                 print subNode.knob('file').value() + "\n"
                             fill_files(N=subNode)
                 else:
                     if node.Class() in readTypes:
-                        if DEV > 0:
+                        if DEV > 1:
                             print "Adding: " + node.fullName() + ", class: " + str(node.Class())
                             print node.knob('file').value() + "\n"
                         fill_files(N=node)
@@ -140,8 +140,11 @@ if nuke.GUI is True:
                     if seq_object:
                             if metadata[1] - metadata[0] > self.prj_length + 50:
                                 seq_suspicious += 1
-                            if len(seq_object.frames()) <= self.precisionValue.value():
-                                if len(seq_object.frames()) < 2:
+                            seq_length = int(len(seq_object.frames())) - 1
+                            if DEV > 0:
+                                print "seq_length: %s" %seq_length
+                            if seq_length <= self.precisionValue.value():
+                                if seq_length < 2:
                                     seq_frame = seq_object.format('%h') + seq_object.format('%t')
                                     seq_frame_path = os.path.join(seq_folder, seq_frame)
                                     if DEV > 0:
@@ -179,10 +182,13 @@ if nuke.GUI is True:
                                         if DEV > 0:
                                             print "\n! something wrong with " + seq_frame_path + "\n"
                                 if calculated > 1:
-                                    approx_size = approx_size / calculated * metadata[1]
-                                    seq_size += approx_size
+                                    f_approx_size = approx_size / calculated
+                                    e_approx_size = f_approx_size * seq_length
+                                    seq_size += e_approx_size
+                                    if DEV > 0:
+                                        print str(e_approx_size) + " = " + str(f_approx_size) + " * " + str(seq_length)
                                 else:
-                                    seq_size += approx_size
+                                    seq_size += e_approx_size
                     else:
                         if DEV > 0:
                             print "estimating SINGLE file: " + sequence
@@ -202,7 +208,7 @@ if nuke.GUI is True:
                                 seq_errors += 1
                             if not self.sortedBool.value():
                                 if constr:
-                                    print "* " + constr + " .... " + sconvert(seq_size/10) # !ducktape
+                                    print "* " + constr + " .... " + sconvert(seq_size)
                             else:
                                 if constr:
                                     nice_files_to_check[constr] = files_to_check[sequence]
@@ -213,9 +219,9 @@ if nuke.GUI is True:
                     nice_files_to_check[x] = nice_files_to_check[x][2]
                 sorted_files_to_check = sorted(nice_files_to_check.items(), key=operator.itemgetter(1), reverse=True)
                 for x in sorted_files_to_check:
-                    print "* " + str(x[0]) + " .... " + sconvert(int(x[1])/10) # !ducktape
+                    print "* " + str(x[0]) + " .... " + sconvert(int(x[1]))
 
-            print "\n~ Total size: " + sconvert(total_size/10) # !ducktape
+            print "\n~ Total size: " + sconvert(total_size)
             if seq_suspicious > 0:
                 print "~ Suspiciously big sequences: %s" %seq_suspicious
             elif seq_errors > 0:
