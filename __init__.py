@@ -201,9 +201,10 @@ if nuke.GUI is True:
                             else:
                                 seq_errors += 1
                             if not self.sortedBool.value():
-                                print "* " + constr + " .... " + sconvert(seq_size)
+                                if constr:
+                                    print "* " + constr + " .... " + sconvert(seq_size)
                             else:
-                                if constr is not None:
+                                if constr:
                                     nice_files_to_check[constr] = files_to_check[sequence]
                             total_size += seq_size
 
