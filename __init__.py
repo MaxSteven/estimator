@@ -202,7 +202,7 @@ if nuke.GUI is True:
                                 seq_errors += 1
                             if not self.sortedBool.value():
                                 if constr:
-                                    print "* " + constr + " .... " + sconvert(seq_size)
+                                    print "* " + constr + " .... " + sconvert(seq_size/10) # !ducktape
                             else:
                                 if constr:
                                     nice_files_to_check[constr] = files_to_check[sequence]
@@ -213,9 +213,9 @@ if nuke.GUI is True:
                     nice_files_to_check[x] = nice_files_to_check[x][2]
                 sorted_files_to_check = sorted(nice_files_to_check.items(), key=operator.itemgetter(1), reverse=True)
                 for x in sorted_files_to_check:
-                    print "* " + str(x[0]) + " .... " + sconvert(int(x[1]))
+                    print "* " + str(x[0]) + " .... " + sconvert(int(x[1])/10) # !ducktape
 
-            print "\n~ Total size: " + sconvert(total_size)
+            print "\n~ Total size: " + sconvert(total_size/10) # !ducktape
             if seq_suspicious > 0:
                 print "~ Suspiciously big sequences: %s" %seq_suspicious
             elif seq_errors > 0:
