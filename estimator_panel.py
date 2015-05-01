@@ -10,12 +10,13 @@
 #
 # Developed on OSX, should work on random *nix system
 # --------------------------------------------------------------
+
+import os, sys
 if __name__ == "__main__":
-    sys.exit("This is intended to be used within Nuke")
+    sys.exit("\nThis is intended to be used within Nuke\n")
 
 import nuke
 import nukescripts
-import os, sys
 import threading
 import operator
 
