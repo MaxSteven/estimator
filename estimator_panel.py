@@ -1,3 +1,18 @@
+# -*- coding: utf-8 -*-
+# --------------------------------------------------------------
+# Estimator: calculate space occupied by files presented in script
+#
+# Andrew Savchenko © 2015
+# art@artaman.net
+#
+# Attribution 4.0 International (CC BY 4.0)
+# https://creativecommons.org/licenses/by/4.0/
+#
+# Developed on OSX, should work on random *nix system
+# --------------------------------------------------------------
+if __name__ == "__main__":
+    sys.exit("This is intended to be used within Nuke")
+
 import nuke
 import nukescripts
 import os, sys
@@ -40,7 +55,11 @@ class estimatorPanel(nukescripts.PythonPanel):
             DEV = 0
 
         def evaluate_script(self, checker=0):
-
+            """
+            :param checker: 1 = Regular evaluation, mostly useful from panel itself
+                            2 = Return dictionary of parsed 'Read' nodes
+            :return: {'/path/to/sequence_%0Xd.xxx': [first_frame, last_frame, size_in_bytes]}
+            """
             files_to_check = {}
             readTypes = ('Read', 'DeepRead', 'ReadGeo2')
 
@@ -65,7 +84,6 @@ class estimatorPanel(nukescripts.PythonPanel):
                         file_path = file_path.replace("%d", numbering)
                     return files_to_check.update({file_path: [first, last]})
 
-            # noinspection PyArgumentList
             for node in nuke.allNodes():
                 if node.knob('gizmo_file') or node.Class() == "Group":
                     for subNode in nuke.toNode(node.name()).nodes():
@@ -81,7 +99,8 @@ class estimatorPanel(nukescripts.PythonPanel):
                             print node.knob('file').value() + "\n"
                         fill_files(N=node)
 
-            print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
+            if checker == 1:
+                print "\n~ There are " + str(len(files_to_check)) + " sequences in this script.\n"
 
             total_size = 0
             seq_errors = 0
@@ -182,7 +201,7 @@ class estimatorPanel(nukescripts.PythonPanel):
 
                     files_to_check[sequence].append(seq_size)
 
-                    if checker > 0:
+                    if checker == 1:
                             constr = None
                             if seq_size > 0:
                                 if self.pathBool.value() is False:
@@ -206,11 +225,15 @@ class estimatorPanel(nukescripts.PythonPanel):
                 for x in sorted_files_to_check:
                     print "* " + str(x[0]) + " .... " + sconvert(int(x[1]))
 
-            print "\n~ Total size: " + sconvert(total_size)
-            if seq_suspicious > 0:
-                print "~ Suspiciously big sequences: %s" %seq_suspicious
-            elif seq_errors > 0:
-                print "! Unreadable read nodes: %s" %seq_errors
+            if checker == 1:
+                print "\n~ Total size: " + sconvert(total_size)
+                if seq_suspicious > 0:
+                    print "~ Suspiciously big sequences: %s" %seq_suspicious
+                elif seq_errors > 0:
+                    print "! Unreadable read nodes: %s" %seq_errors
+
+            if checker == 2:
+                return files_to_check
 
         def knobChanged(self, knob):
             if knob is self.runBtn:
