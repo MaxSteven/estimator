@@ -1,5 +1,6 @@
 ## What is it?
-Panel for Nuke that allows you to quickly estimate size of all sources in the script.
+Panel for Nuke that allows you to quickly estimate size of all sources in the script.  
+Also can be used as imported module to provide same functionality for another tool.
 
 ## Installation
 1. `cd ~/.nuke && git clone https://github.com/artaman/estimator.git`  
@@ -21,7 +22,7 @@ else:
 ```
 
 ## Nuke panel
-After following steps above you will have a new panel called "Estimator".  
+After following steps above you will have a new panel called "Estimator".
 By default it is dockable, but can be dragged out and used as a modal window:
 
 ![esti3](https://cloud.githubusercontent.com/assets/300146/6656478/287f9e46-cb67-11e4-9e6f-d9a5cf1885b6.png)
@@ -32,3 +33,17 @@ By default it is dockable, but can be dragged out and used as a modal window:
 * __Sort by size__ – Wait until calculation is done and display results sorted.
 
 Click 'Run' and enjoy the fact you can use Nuke while script is doing its job in separate thread.
+
+## Usage within other script
+
+```python
+estimator_path = os.getenv("HOME") + "/.nuke/estimator"
+sys.path.append(estimator_path)
+from estimator_panel import estimatorPanel
+
+calc = estimatorPanel()
+reads = calc.evaluate_script(2)
+
+print reads
+# {'/path/to/sequence_%0Xd.xxx': [first_frame, last_frame, size_in_bytes]}
+```
