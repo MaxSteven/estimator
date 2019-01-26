@@ -3,7 +3,7 @@
 # Estimator: calculate space occupied by files presented in script
 #
 # Andrew Savchenko © 2015
-# art@artaman.net
+# andrew@savchenko.net
 #
 # Attribution 4.0 International (CC BY 4.0)
 # https://creativecommons.org/licenses/by/4.0/
